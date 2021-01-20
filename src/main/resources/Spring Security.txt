@@ -49,7 +49,7 @@ Create MyUserDetailsService implements UserDetailsService
 			return new UserPrincipal(user);
 		}
 		
-Bcrypt - Uses multiple rounds of hashing. Better than SHA-256
+Bcrypt - Uses multiple rounds of hashing. Better than SHA-256 
 
 	@Bean
 	public AuthenticationProvider authProvider() {

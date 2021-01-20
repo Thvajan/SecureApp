@@ -14,11 +14,13 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+//@EnableResourceServer
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	@Autowired
 	private UserDetailsService userDetailsService;
 
+	// my db auth
 	@Bean
 	public AuthenticationProvider authProvider() {
 		DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
@@ -28,22 +30,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 	}
 
+	// my own login page
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.csrf().disable()
-			.authorizeRequests().antMatchers("/login").permitAll()
-			.anyRequest().authenticated()
-			.and()
-			.formLogin()
-			.loginPage("/login")
-			.permitAll()
-			.and().logout().invalidateHttpSession(true)
-			.clearAuthentication(true)
-			.logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
-			.logoutSuccessUrl("/logout-done").permitAll();
+		http.csrf().disable().authorizeRequests().antMatchers("/login").permitAll().anyRequest().authenticated().and()
+				.formLogin().loginPage("/login").permitAll().and().logout().invalidateHttpSession(true)
+				.clearAuthentication(true).logoutRequestMatcher(new AntPathRequestMatcher("/logout"))
+				.logoutSuccessUrl("/logout-done").permitAll();
 	}
 
-	
+//	@Override
+//	protected void configure(HttpSecurity http) throws Exception {
+//		http.csrf().disable()
+//			.authorizeRequests().antMatchers("/login")
+//			.permitAll().anyRequest().authenticated();
+////			.and().httpBasic();
+//	}
+
 //	@Bean
 //	@Override
 //	protected MyUserDetailsService userDetailsService() {

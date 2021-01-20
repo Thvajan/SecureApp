@@ -9,6 +9,7 @@ public class HomeController {
 	@RequestMapping("/")
 	public String home() {
 		return "home.html";
+//		return ("<h1>Welcome Home</h1>");
 	}
 	
 	@RequestMapping("/login")

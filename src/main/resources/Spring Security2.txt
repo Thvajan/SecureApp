@@ -1,0 +1,104 @@
+App Level Security:
+Login & logout funtionality
+Allow\Block logged in user access to URLs
+Allow\Block logged in user access to URLs - Role based
+Intra app Auth like OAuth
+SSO, OKTA, LDAP
+MicroServices Security using JWT
+Method Level Security
+
+Protects from:
+Session fixation
+Click Jacking 
+Click site req forgery
+
+
+Core Concepts:
+Authentication
+Authorization
+Principal
+	-Currently Logged in user
+	-Ensure the user isn't asked to authenticated multiple times in a session
+Granted Authority
+	-List of allowed actions(configured list of things the user is allowed to do)
+	-Usually Fine-grained	
+Roles
+	-A profile with predefined set\grouping of granted Authorities
+	-Usually Coarse-grained
+	
+Spring Security Uses:
+	-SS uses filters
+	-Filters intercepts every user request by being in between User and URLs
+	-By Default it says Authenticaiton is required for all URL access except pages like errorPage
+	-Adds login form
+	-handles login error
+	-Creates own userId(Default value: user) and Password if creds are not configured
+	In spring app.properties we can configure one basic user
+	-spring.security.user.name=<can configure>
+	-spring.security.user.password=<can configure>
+	
+To Configure Authenticaiton:
+	-Authentication Manager - authenticate() method
+	-Using AuthenticationManagerBuilder class
+	config class extends WebSecurityConfigurerAdapter
+	override configure(AuthenticationManagerBuilder auth)
+	use auth.inMemoryAuthentication().... configure one or more user,pass and roles.
+	annotate class as @EnableWebSecurity
+	Set up password encoder:
+		-Expose @Bean of type PasswordEncoder
+		
+Authorization control:
+	-Authorize users to view certain pages based on their role
+	config class extends WebSecurityConfigurerAdapter
+	override configure(HttpSecurity http)
+	http.authorizeRequests()
+			.antMatchers("/admin").hasRole("ADMIN")
+			.antMatchers("/user").hasAnyRole("USER","ADMIN")
+			.antMatchers("/").permitAll()
+			.and().formLogin();
+	Configuration needs ot be done from most restrictive on top to the least restrictive on the bottom
+	this is to not allow the first filter to match with every user
+	
+Spring Security filter uses DelegatingFilterProxy. '/*' for all URLS, by default.
+
+DelegatingFilterProxy - Delegates filter mechanism to internal Filters like authenticationFilters and Authorization Filters
+
+Spring Authenticaiton accepts the creds and gives Principal if correct.
+	 Using Object of Class Authenticaiton
+	 AuthenticaitonProvider.authenticate method is responsible for the Authenticaiton process
+	 authenticate(Authenticaiton authentication) and returns Authenticaiton
+	 Authenticaiton Obj contains creds before the auth process, Principal after the auth process and the auhtorities for this user for upcoming requests
+
+Single App can have multiple authentication strategies using multiple AuthenticaitonProviders
+	Each AuthenticaitonProvider knows what creds to expect like pwd, LDAP, OAuth
+	Auhtentication Manager manages all AuthenticaitonProviders using ProviderManager. 
+	ProviderManager delegates the authentication to particulat AuthenticaitonProvider based on type of authentication like pwd, LDAP, OAuth
+	Each AuthenticaitonProvider has a supports method that tells which type of Authenticaiton mechanism it supports
+	The AuthenticaitonProvider checks with it's identity store (db or ldap or so) to verify and retrieve the user details by creds.
+		The user info retrieval is done by UserDetailsService loadUserByUserName() returns UserDetails obj
+		The AuthenticaitonProvider may use the same UserDetails obj as the principal obj
+		
+		
+Full Authentication Flow:
+	
+	
+	New User Req 
+		--> Authenticaiton Filter intercepts -->creates Authenticaiton Obj --> To AuthenticationManager 
+		
+		--> AuthenticationManager Finds Right AuthenticaitonProvider using Supports()  
+		
+		--> then calls authenticate() for that provider and passes authentication obj
+		
+		--> the provider looksup the user using UserDetailsService.loadUserByUserName()
+		
+		--> gets back UserDetails obj instance
+		
+		--> If successfull, UserDetails is filled with Principal and authorities in it
+		
+				--> this goes back to the filter
+				
+				--> The Filter takes the authentication obj and stores in the Thread's local SecurityContext for Authorization and Principal ref
+				
+				--> In a session all subsequent requests are authenticated with this info by another Filter
+				
+		--> If Unsuccessfull, the AuthenticaitonProvider throws Authentication exception
